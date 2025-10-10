@@ -1,10 +1,11 @@
 import Editor from '@monaco-editor/react';
 
 interface CodeEditorProps {
-  file: { name: string; content: string } | null;
+  file: { name: string; content: string; path?: string } | null;
+  onChange?: (content: string) => void;
 }
 
-export default function CodeEditor({ file }: CodeEditorProps) {
+export default function CodeEditor({ file, onChange }: CodeEditorProps) {
   if (!file) {
     return (
       <div className="h-full flex items-center justify-center text-gray-400">
@@ -27,9 +28,22 @@ export default function CodeEditor({ file }: CodeEditorProps) {
       theme="vs-dark"
       language={language}
       value={file.content}
+      onChange={(value) => onChange && onChange(value ?? '')}
+      onMount={(editor, monaco) => {
+        // Add Cmd/Ctrl+S to trigger save (call onChange with current value)
+        try {
+          const key = monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS;
+          editor.addCommand(key, () => {
+            if (onChange) {
+              onChange(editor.getValue());
+            }
+          });
+        } catch {
+          // ignore if monaco keybindings not available
+        }
+      }}
       options={{
-        readOnly: true,
-        minimap: { enabled: false },
+        minimap: { enabled: true },
         fontSize: 14,
         wordWrap: 'on',
         scrollBeyondLastLine: false,

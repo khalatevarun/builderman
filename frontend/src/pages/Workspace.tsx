@@ -9,14 +9,18 @@ import { useWebContainer } from '../hooks/useWebContainer';
 import { WebContainer } from '@webcontainer/api';
 import { getChatResponse, getTemplate } from '../utility/api';
 import { handleDownload } from '../utility/helper';
+import { useRef } from 'react';
 
 export default function Workspace() {
   const location = useLocation();
   const { prompt } = location.state || { prompt: '' };
-  const [selectedFile, setSelectedFile] = useState<{ name: string; content: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<{ name: string; content: string; path?: string } | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [currentStep, setCurrentStep] = useState('');
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const pendingSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // (no persistent storage) files are kept in-memory only
   const webcontainer = useWebContainer();
   const [userPrompt, setUserPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -241,7 +245,43 @@ export default function Workspace() {
 
     {/* Content Area */}
     <div className="flex-1">
-      <Content selectedFile={selectedFile} webContainer={webcontainer as WebContainer} />
+      <Content
+        selectedFile={selectedFile}
+        webContainer={webcontainer as WebContainer}
+        onFileChange={(content: string) => {
+          // Debounced update: batch frequent onChange events (typing) and apply after 500ms
+          if (!selectedFile || !selectedFile.path) return;
+
+          const targetPath = selectedFile.path;
+
+          // clear existing timer
+          const existing = pendingSaveTimers.current[targetPath];
+          if (existing) clearTimeout(existing);
+
+          pendingSaveTimers.current[targetPath] = setTimeout(() => {
+            const updateFilesByPath = (nodes: FileItem[], targetPath: string, parentPath = ''): FileItem[] => {
+              return nodes.map(node => {
+                const currentPath = `${parentPath}/${node.name}`;
+
+                if (node.type === 'file' && currentPath === targetPath) {
+                  return { ...node, content };
+                }
+
+                if (node.type === 'folder' && node.children) {
+                  return { ...node, children: updateFilesByPath(node.children, targetPath, currentPath) };
+                }
+
+                return node;
+              });
+            };
+
+            setFiles(prev => updateFilesByPath(prev, targetPath));
+
+            setSelectedFile(f => f ? { ...f, content } : f);
+            delete pendingSaveTimers.current[targetPath];
+          }, 500);
+        }}
+      />
     </div>
   </div>
   );

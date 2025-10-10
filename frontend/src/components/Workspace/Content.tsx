@@ -6,10 +6,11 @@ import { Preview } from './Preview';
 
 interface ContentProps {
   webContainer: WebContainer
-  selectedFile: { name: string; content: string } | null;
+  selectedFile: { name: string; content: string; path?: string } | null;
+  onFileChange?: (content: string) => void;
 }
 
-export default function Content({ selectedFile, webContainer }: ContentProps) {
+export default function Content({ selectedFile, webContainer, onFileChange }: ContentProps) {
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
 
   return (
@@ -17,7 +18,7 @@ export default function Content({ selectedFile, webContainer }: ContentProps) {
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="flex-1">
         {activeTab === 'code' ? (
-          <CodeEditor file={selectedFile} />
+          <CodeEditor file={selectedFile} onChange={onFileChange} />
         ) : (
           <Preview webContainer={webContainer} />
         )}

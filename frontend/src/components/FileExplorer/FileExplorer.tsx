@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FolderTree } from 'lucide-react';
 import FileItem from './FileItem';
 
@@ -10,7 +10,7 @@ interface FileNode {
 }
 
 interface FileExplorerProps {
-  onFileSelect: (file: { name: string; content: string }) => void;
+  onFileSelect: (file: { name: string; content: string; path: string }) => void;
   files: FileNode[];
 }
 
@@ -42,7 +42,8 @@ export default function FileExplorer({ onFileSelect, files }: FileExplorerProps)
             onToggle={() => toggleFolder(currentPath)}
             onSelect={() => node.type === 'file' && node.content && onFileSelect({
               name: node.name,
-              content: node.content
+              content: node.content,
+              path: currentPath
             })}
           />
           {node.type === 'folder' && isOpen && node.children && (
