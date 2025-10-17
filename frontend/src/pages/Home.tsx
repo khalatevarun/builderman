@@ -128,9 +128,10 @@ const Home = () => {
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgb(107 114 128) transparent',
         }}
+        rows={1}
         className="w-full px-6 py-4 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 
                   placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12
-                  min-h-[60px] overflow-y-auto
+                  overflow-y-auto
                   [&::-webkit-scrollbar]:w-2 
                   [&::-webkit-scrollbar-track]:bg-transparent
                   [&::-webkit-scrollbar-thumb]:bg-gray-600
