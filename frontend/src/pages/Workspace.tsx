@@ -248,6 +248,7 @@ export default function Workspace() {
       <Content
         selectedFile={selectedFile}
         webContainer={webcontainer as WebContainer}
+        files={files}
         onFileChange={(content: string) => {
           // Debounced update: batch frequent onChange events (typing) and apply after 500ms
           if (!selectedFile || !selectedFile.path) return;
