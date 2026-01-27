@@ -8,9 +8,10 @@ interface ContentProps {
   webContainer: WebContainer
   selectedFile: { name: string; content: string; path?: string } | null;
   onFileChange?: (content: string) => void;
+  files: any[]; // Add files prop to track changes
 }
 
-export default function Content({ selectedFile, webContainer, onFileChange }: ContentProps) {
+export default function Content({ selectedFile, webContainer, onFileChange, files }: ContentProps) {
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
 
   return (
@@ -20,7 +21,11 @@ export default function Content({ selectedFile, webContainer, onFileChange }: Co
         {activeTab === 'code' ? (
           <CodeEditor file={selectedFile} onChange={onFileChange} />
         ) : (
-          <Preview webContainer={webContainer} />
+          <Preview 
+            webContainer={webContainer} 
+            files={files}
+            isActive={activeTab === 'preview'}
+          />
         )}
       </div>
     </div>

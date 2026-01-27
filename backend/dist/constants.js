@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.allowedHTMLElements = exports.MODIFICATIONS_TAG_NAME = exports.WORK_DIR = exports.WORK_DIR_NAME = exports.MAX_RESPONSE_SEGMENTS = exports.MAX_TOKENS = void 0;
-// see https://docs.anthropic.com/en/docs/about-claude/models
+// token limits for OpenRouter / chat models
 exports.MAX_TOKENS = 8192;
 // limits the number of model responses that can be returned in a single request
 exports.MAX_RESPONSE_SEGMENTS = 2;

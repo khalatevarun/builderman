@@ -1,25 +1,23 @@
 import { useEffect, useState } from "react";
-import { WebContainer } from '@webcontainer/api';
+import { WebContainer } from "@webcontainer/api";
 
-export function useWebContainer() {
-    const [webcontainer, setWebcontainer] = useState<WebContainer | null>(null);
+/** Singleton boot promise – WebContainer allows only one instance per page. */
+let bootPromise: Promise<WebContainer> | null = null;
 
-    async function main() {
-        try {
-            console.log("Initializing WebContainer...");
-            const webcontainerInstance = await WebContainer.boot();
-            console.log("WebContainer instance:", webcontainerInstance);
-            setWebcontainer(webcontainerInstance);
-        } catch (error) {
-            console.error("Failed to initialize WebContainer:", error);
-        }
-    }
+function getWebContainer(): Promise<WebContainer> {
+  if (bootPromise) return bootPromise;
+  bootPromise = WebContainer.boot();
+  return bootPromise;
+}
 
-    useEffect(() => {
-        if (!webcontainer) {
-            main();
-        }
-    }, []);
+export function useWebContainer(): WebContainer | null {
+  const [webcontainer, setWebcontainer] = useState<WebContainer | null>(null);
 
-    return webcontainer;
+  useEffect(() => {
+    getWebContainer()
+      .then(setWebcontainer)
+      .catch((error) => console.error("Failed to initialize WebContainer:", error));
+  }, []);
+
+  return webcontainer;
 }
