@@ -9,6 +9,7 @@ interface ContentProps {
   webContainer: WebContainer | null;
   selectedFile: { name: string; content: string; path?: string } | null;
   onFileChange?: (content: string) => void;
+  onDownload?: () => void;
   files: FileItem[];
   isBuildingApp: boolean;
 }
@@ -17,6 +18,7 @@ export default function Content({
   selectedFile,
   webContainer,
   onFileChange,
+  onDownload,
   files,
   isBuildingApp,
 }: ContentProps) {
@@ -31,7 +33,7 @@ export default function Content({
 
   return (
     <div className="h-full flex flex-col">
-      <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} onDownload={onDownload} />
       <div className="flex-1">
         {activeTab === 'code' ? (
           <CodeEditor file={selectedFile} onChange={onFileChange} />
