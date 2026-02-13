@@ -1,18 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { WebContainer } from '@webcontainer/api';
 import Tabs from './Tabs';
 import CodeEditor from './CodeEditor';
-import { WebContainer } from '@webcontainer/api';
 import { Preview } from './Preview';
+import type { FileItem } from '../../types';
 
 interface ContentProps {
-  webContainer: WebContainer
+  webContainer: WebContainer | null;
   selectedFile: { name: string; content: string; path?: string } | null;
   onFileChange?: (content: string) => void;
-  files: any[]; // Add files prop to track changes
+  files: FileItem[];
+  isBuildingApp: boolean;
 }
 
-export default function Content({ selectedFile, webContainer, onFileChange, files }: ContentProps) {
+export default function Content({
+  selectedFile,
+  webContainer,
+  onFileChange,
+  files,
+  isBuildingApp,
+}: ContentProps) {
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code');
+
+  // Switch to code tab when the user selects a file
+  useEffect(() => {
+    if (selectedFile) {
+      setActiveTab('code');
+    }
+  }, [selectedFile]);
 
   return (
     <div className="h-full flex flex-col">
@@ -21,10 +36,10 @@ export default function Content({ selectedFile, webContainer, onFileChange, file
         {activeTab === 'code' ? (
           <CodeEditor file={selectedFile} onChange={onFileChange} />
         ) : (
-          <Preview 
-            webContainer={webContainer} 
+          <Preview
+            webContainer={webContainer}
             files={files}
-            isActive={activeTab === 'preview'}
+            isBuildingApp={isBuildingApp}
           />
         )}
       </div>
