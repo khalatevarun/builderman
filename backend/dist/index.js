@@ -33,7 +33,7 @@ const openai = new openai_1.default({
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-const MODEL = "mistralai/devstral-2512:free";
+const MODEL = "arcee-ai/trinity-large-preview:free";
 app.post("/template", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     const prompt = req.body.prompt;
@@ -46,7 +46,7 @@ app.post("/template", (req, res) => __awaiter(void 0, void 0, void 0, function* 
             },
             { role: "user", content: prompt },
         ],
-        max_tokens: 200,
+        max_tokens: 50,
     });
     const answer = (_d = (_c = (_b = (_a = response.choices[0]) === null || _a === void 0 ? void 0 : _a.message) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.trim().toLowerCase()) !== null && _d !== void 0 ? _d : "";
     if (answer === "react") {
@@ -90,7 +90,7 @@ app.post("/enhance-prompt", (req, res) => __awaiter(void 0, void 0, void 0, func
                 </original_prompt>`,
                 },
             ],
-            max_tokens: 1000,
+            max_tokens: 600,
             stream: true,
         });
         try {

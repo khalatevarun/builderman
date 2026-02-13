@@ -1,10 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedHTMLElements = exports.MODIFICATIONS_TAG_NAME = exports.WORK_DIR = exports.WORK_DIR_NAME = exports.MAX_RESPONSE_SEGMENTS = exports.MAX_TOKENS = void 0;
-// token limits for OpenRouter / chat models
-exports.MAX_TOKENS = 8192;
-// limits the number of model responses that can be returned in a single request
-exports.MAX_RESPONSE_SEGMENTS = 2;
+exports.allowedHTMLElements = exports.MODIFICATIONS_TAG_NAME = exports.WORK_DIR = exports.WORK_DIR_NAME = void 0;
 exports.WORK_DIR_NAME = 'project';
 exports.WORK_DIR = `/home/${exports.WORK_DIR_NAME}`;
 exports.MODIFICATIONS_TAG_NAME = 'bolt_file_modifications';

@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const MODEL = "mistralai/devstral-2512:free";
+const MODEL = "arcee-ai/trinity-large-preview:free";
 
 app.post("/template", async (req, res) => {
   const prompt = req.body.prompt;
@@ -31,7 +31,7 @@ app.post("/template", async (req, res) => {
       },
       { role: "user", content: prompt },
     ],
-    max_tokens: 200,
+    max_tokens: 50,
   });
 
   const answer = response.choices[0]?.message?.content?.trim().toLowerCase() ?? "";
@@ -79,7 +79,7 @@ app.post("/enhance-prompt", async (req, res) => {
                 </original_prompt>`,
         },
       ],
-      max_tokens: 1000,
+      max_tokens: 600,
       stream: true,
     });
 
