@@ -45,12 +45,6 @@ export default function Workspace() {
           >
             {phase === 'building' ? 'Loading...' : 'Submit'}
           </button>
-          <button
-            onClick={() => handleDownload(files)}
-            className="mt-2 w-full p-2 rounded bg-green-600 text-gray-100"
-          >
-            Export Code
-          </button>
         </div>
       </div>
 
@@ -67,6 +61,7 @@ export default function Workspace() {
           files={files}
           isBuildingApp={phase !== 'ready'}
           onFileChange={editFile}
+          onDownload={() => handleDownload(files)}
         />
       </div>
     </div>
