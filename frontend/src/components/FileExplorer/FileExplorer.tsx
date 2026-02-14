@@ -56,9 +56,9 @@ export default function FileExplorer({ onFileSelect, files }: FileExplorerProps)
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-200 flex items-center gap-2">
-          <FolderTree className="h-5 w-5 text-blue-400" />
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <FolderTree className="h-4 w-4 text-primary" />
           Files
         </h2>
       </div>

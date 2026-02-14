@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Green palette: dark forest primary, light surfaces */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 142 45% 18%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 140 20% 94%;
+    --secondary-foreground: 142 45% 18%;
+    --muted: 140 15% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 140 25% 92%;
+    --accent-foreground: 142 45% 18%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 140 15% 88%;
+    --input: 140 15% 88%;
+    --ring: 142 45% 25%;
+    --radius: 0.5rem;
+    /* Home hero gradient (green atmosphere) */
+    --hero-from: 142 40% 14%;
+    --hero-via: 85 28% 38%;
+    --hero-to: 142 35% 22%;
+  }
+  .dark {
+    --background: 142 35% 8%;
+    --foreground: 0 0% 98%;
+    --card: 142 30% 11%;
+    --card-foreground: 0 0% 98%;
+    --popover: 142 30% 11%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142 45% 22%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 142 25% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 142 20% 16%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 142 25% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 142 20% 18%;
+    --input: 142 20% 18%;
+    --ring: 142 40% 35%;
+    --hero-from: 142 45% 10%;
+    --hero-via: 85 25% 28%;
+    --hero-to: 142 40% 14%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -1,29 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Code, Eye, Edit } from 'lucide-react';
-import { BACKEND_URL } from '../utility/api';
+import { Sparkles, ArrowUp, Code, Eye, Edit } from 'lucide-react';
+import { BACKEND_URL } from '@/utility/api';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
 
-const Home = () => {
-  // Add useRef for the textarea
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+export default function Home() {
   const [idea, setIdea] = useState('');
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
-  // Function to scroll to bottom
-  const scrollToBottom = () => {
-    if (textareaRef.current) {
-      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-    }
-  };
 
-  // Effect to handle auto-scrolling when idea changes
-  useEffect(() => {
-    scrollToBottom();
-  }, [idea]);
-  
-
-  const handleSubmit = (event:any) => {
-    event.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (idea.trim()) {
       navigate('/workspace', { state: { prompt: idea } });
     }
@@ -34,43 +24,27 @@ const Home = () => {
       setIsEnhancing(true);
       const response = await fetch(`${BACKEND_URL}/enhance-prompt`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: idea }),
       });
-
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No reader available');
-
-      // Store the original prompt
-      const originalPrompt = idea;
-      setIdea(''); // Clear the input before streaming starts
-
-      // Create a new TextDecoder to handle the incoming stream
+      setIdea('');
       const decoder = new TextDecoder();
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        // Decode the stream chunk
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n');
-
-        // Process each line
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(5);
             if (data === '[DONE]') break;
-
             try {
               const parsed = JSON.parse(data);
-              if (parsed.text) {
-                setIdea(current => current + parsed.text);
-              }
-            } catch (e) {
-              console.error('Error parsing SSE data:', e);
+              if (parsed.text) setIdea((c) => c + parsed.text);
+            } catch {
+              // ignore parse errors
             }
           }
         }
@@ -82,122 +56,95 @@ const Home = () => {
     }
   };
 
-
   const features = [
     {
       icon: <Code className="w-6 h-6" />,
-      title: "Production-Ready Code",
-      description: "Get fully functional code instantly from your ideas"
+      title: 'Production-Ready Code',
+      description: 'Get fully functional code instantly from your ideas',
     },
     {
       icon: <Eye className="w-6 h-6" />,
-      title: "Live Preview",
-      description: "See your application come to life in real-time"
+      title: 'Live Preview',
+      description: 'See your application come to life in real-time',
     },
     {
       icon: <Edit className="w-6 h-6" />,
-      title: "Flexible Editing",
-      description: "Edit via prompts or use the built-in code editor"
-    }
+      title: 'Flexible Editing',
+      description: 'Edit via prompts or use the built-in code editor',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <div className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-16">
+    <div className="min-h-screen bg-hero-gradient text-white flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-5xl mx-auto flex flex-col items-center">
+        <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <Sparkles className="w-8 h-8 text-blue-400" />
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            <Sparkles className="w-8 h-8 text-primary-foreground" />
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
               BuilderMan
             </h1>
           </div>
-          
-          <p className="text-gray-300 text-xl mb-8 max-w-2xl mx-auto">
+
+          <p className="text-white/80 text-xl mb-10 max-w-xl mx-auto">
             Transform your ideas into reality with AI-powered development
           </p>
 
-          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-  <div className="flex gap-4 items-start">
-    <div className="flex-1 relative">
-      <textarea
-        ref={textareaRef}
-        value={idea}
-        onChange={(e) => setIdea(e.target.value)}
-        placeholder="Describe what you want to build..."
-        style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgb(107 114 128) transparent',
-        }}
-        rows={1}
-        className="w-full px-6 py-4 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 
-                  placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12
-                  overflow-y-auto
-                  [&::-webkit-scrollbar]:w-2 
-                  [&::-webkit-scrollbar-track]:bg-transparent
-                  [&::-webkit-scrollbar-thumb]:bg-gray-600
-                  [&::-webkit-scrollbar-thumb]:rounded-full"
-      />
-      <button
-        type="button"
-        onClick={enhancePrompt}
-        disabled={isEnhancing || !idea.trim()}
-        className="absolute right-3 top-4 p-2 text-gray-400 
-                  hover:text-blue-400 transition-colors disabled:opacity-50 
-                  disabled:cursor-not-allowed group"
-      >
-        <Sparkles className="w-5 h-5" />
-        <div className="absolute right-0 w-52 p-2 mt-2 text-sm text-gray-100 bg-gray-800 rounded-lg 
-                      shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible 
-                      transition-all duration-200 -translate-y-1 group-hover:translate-y-0
-                      border border-gray-700 z-10">
-          Enhance your prompt for better results
-        </div>
-      </button>
-    </div>
-    <div className="flex-shrink-0">
-      <button
-        type="submit"
-        disabled={!idea.trim() || isEnhancing}
-        className="h-[60px] px-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-semibold
-                  hover:opacity-90 transition-all duration-200 shadow-lg shadow-blue-500/25
-                  disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isEnhancing ? 'Enhancing Prompt...' : 'Build Now'}
-      </button>
-    </div>
-  </div>
-</form>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {features.map((feature, index) => (
-            <div key={index} className="bg-gray-800/50 backdrop-blur border border-gray-700/50 rounded-xl p-6
-                                      hover:bg-gray-800 transition-colors duration-200">
-              <div className="bg-blue-500/10 rounded-lg p-3 w-fit mb-4">
-                {feature.icon}
+          {/* Main CTA: large input box with bottom-left enhance and bottom-right arrow */}
+          <form ref={formRef} onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto">
+            <div className=" flex flex-col rounded-2xl border border-white/25 bg-white/10 shadow-lg overflow-hidden focus-within:bg-white/15 transition-colors">
+              <Textarea
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    formRef.current?.requestSubmit();
+                  }
+                }}
+                placeholder="Describe what you want to build..."
+                rows={4}
+                className="flex-1  w-full resize-none border-0 bg-transparent py-5 px-5 text-lg md:text-lg text-white placeholder:text-white/50 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none shadow-none"
+              />
+              <div className="flex items-center justify-between px-4 pb-4 pt-2">
+                <button
+                  type="button"
+                  onClick={enhancePrompt}
+                  disabled={isEnhancing || !idea.trim()}
+                  className="p-2.5 text-white/60 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-xl hover:bg-white/10"
+                  title="Enhance your prompt for better results"
+                >
+                  <Sparkles className="w-5 h-5" />
+                </button>
+                <Button
+                  type="submit"
+                  disabled={!idea.trim() || isEnhancing}
+                  size="icon"
+                  className="h-11 w-11 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+                >
+                  <ArrowUp className="w-5 h-5" />
+                </Button>
               </div>
-              <h3 className="text-xl font-semibold text-gray-100 mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400">
-                {feature.description}
-              </p>
             </div>
-          ))}
+          </form>
         </div>
 
-        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-8">
-          <h2 className="text-2xl font-semibold text-gray-100 mb-6">Coming Soon</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 text-gray-400">
-              <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-              Streaming Code Generation
-            </div>
-          </div>
+        <div className="grid md:grid-cols-3 gap-8 w-full max-w-5xl mt-4">
+          {features.map((feature, index) => (
+            <Card
+              key={index}
+              className="rounded-xl border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors text-white"
+            >
+              <CardContent className="p-6">
+                <div className="rounded-lg bg-white/10 p-3 w-fit mb-4 text-primary-foreground">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-white/70">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
-export default Home;
+}
