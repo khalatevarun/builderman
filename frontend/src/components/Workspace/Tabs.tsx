@@ -1,5 +1,6 @@
-import React from 'react';
 import { Code2, Eye, FolderDown } from 'lucide-react';
+import { Tabs as TabsPrimitive, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 interface TabsProps {
   activeTab: 'code' | 'preview';
@@ -9,38 +10,35 @@ interface TabsProps {
 
 export default function Tabs({ activeTab, onTabChange, onDownload }: TabsProps) {
   return (
-    <div className="flex items-center border-b border-gray-700">
-      <button
-        className={`flex items-center gap-2 px-4 py-2 border-b-2 ${
-          activeTab === 'code'
-            ? 'text-blue-400 border-blue-400'
-            : 'text-gray-400 border-transparent'
-        } hover:text-blue-400`}
-        onClick={() => onTabChange('code')}
-      >
-        <Code2 className="h-4 w-4" />
-        Code
-      </button>
-      <button
-        className={`flex items-center gap-2 px-4 py-2 border-b-2 ${
-          activeTab === 'preview'
-            ? 'text-blue-400 border-blue-400'
-            : 'text-gray-400 border-transparent'
-        } hover:text-blue-400`}
-        onClick={() => onTabChange('preview')}
-      >
-        <Eye className="h-4 w-4" />
-        Preview
-      </button>
-
+    <div className="flex items-center border-b border-border bg-card">
+      <TabsPrimitive value={activeTab} onValueChange={(v) => onTabChange(v as 'code' | 'preview')}>
+        <TabsList className="h-11 w-auto rounded-none border-0 bg-transparent p-1 gap-1">
+          <TabsTrigger
+            value="code"
+            className="rounded-md border-0 data-[state=active]:bg-primary/80 data-[state=active]:text-foreground data-[state=active]:shadow-none gap-2 px-4"
+          >
+            <Code2 className="h-4 w-4" />
+            Code
+          </TabsTrigger>
+          <TabsTrigger
+            value="preview"
+            className="rounded-md border-0 data-[state=active]:bg-primary/80 data-[state=active]:text-foreground data-[state=active]:shadow-none gap-2 px-4"
+          >
+            <Eye className="h-4 w-4" />
+            Preview
+          </TabsTrigger>
+        </TabsList>
+      </TabsPrimitive>
       {onDownload && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-auto mr-2 hover:bg-accent group"
           onClick={onDownload}
-          className="ml-auto mr-3 p-2 text-green-400 hover:text-green-300 rounded hover:bg-gray-700 transition-colors"
-          title="Download project"
+          title="Export project"
         >
-          <FolderDown className="h-5 w-5" />
-        </button>
+          <FolderDown className="h-5 w-5 text-white group-hover:text-white/90" />
+        </Button>
       )}
     </div>
   );

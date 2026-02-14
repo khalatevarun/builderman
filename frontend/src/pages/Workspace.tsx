@@ -1,10 +1,12 @@
 import { useLocation } from 'react-router-dom';
-import Content from '../components/Workspace/Content';
-import { CheckpointList } from '../components/CheckpointList';
-import { CollapsibleBuildSteps } from '../components/CollapsibleBuildSteps';
-import { useWebContainer } from '../hooks/useWebContainer';
-import { useWorkspace } from '../hooks/useWorkspace';
-import { handleDownload } from '../utility/helper';
+import Content from '@/components/Workspace/Content';
+import { CheckpointList } from '@/components/CheckpointList';
+import { CollapsibleBuildSteps } from '@/components/CollapsibleBuildSteps';
+import { useWebContainer } from '@/hooks/useWebContainer';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { handleDownload } from '@/utility/helper';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function Workspace() {
   const location = useLocation();
@@ -28,30 +30,30 @@ export default function Workspace() {
   } = useWorkspace(prompt);
 
   return (
-    <div className="h-screen flex bg-gray-900">
+    <div className="h-screen flex bg-background text-foreground dark">
       {/* Left Sidebar - Checkpoints + collapsible Build steps */}
-      <div className="w-90 bg-gray-900 border-r border-gray-700 p-4 overflow-y-auto flex flex-col">
+      <div className="w-80 border-r border-border bg-card p-4 overflow-y-auto flex flex-col gap-4">
         <CheckpointList checkpoints={checkpoints} onRestore={restoreCheckpoint} />
         <CollapsibleBuildSteps
           steps={steps}
           currentStep={currentStep}
           onStepClick={setCurrentStep}
         />
-        <div className="mt-4 flex-shrink-0">
-          <input
+        <div className="mt-auto flex-shrink-0 space-y-2">
+          <Input
             type="text"
             value={userPrompt}
             onChange={e => setUserPrompt(e.target.value)}
             placeholder="Enter your prompt"
-            className="w-full p-2 rounded bg-gray-800 text-gray-100"
+            className="h-9"
           />
-          <button
+          <Button
             onClick={submitFollowUp}
-            className="mt-2 w-full p-2 rounded bg-blue-600 text-gray-100"
+            className="w-full"
             disabled={phase === 'building'}
           >
             {phase === 'building' ? 'Loading...' : 'Submit'}
-          </button>
+          </Button>
         </div>
       </div>
 

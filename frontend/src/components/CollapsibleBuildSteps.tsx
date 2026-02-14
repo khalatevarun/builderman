@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { BuildSteps } from './BuildSteps';
-import type { Step } from '../types';
+import type { Step } from '@/types';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 
 interface CollapsibleBuildStepsProps {
   steps: Step[];
@@ -14,27 +16,28 @@ export function CollapsibleBuildSteps({
   currentStep,
   onStepClick,
 }: CollapsibleBuildStepsProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-t border-gray-700 pt-3 mt-3">
-      <button
-        type="button"
-        className="flex items-center gap-2 w-full text-left text-sm font-semibold text-gray-300 hover:text-gray-100 py-1"
-        onClick={() => setExpanded((e) => !e)}
-      >
-        {expanded ? (
-          <ChevronDown className="h-4 w-4 flex-shrink-0" />
-        ) : (
-          <ChevronRight className="h-4 w-4 flex-shrink-0" />
-        )}
-        Build steps
-      </button>
-      {expanded && (
+    <Collapsible open={open} onOpenChange={setOpen} className="border-t border-border pt-3 mt-3">
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-sm font-semibold text-foreground hover:bg-accent/50 py-1 h-auto"
+        >
+          {open ? (
+            <ChevronDown className="h-4 w-4 shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          )}
+          Build steps
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
         <div className="mt-2">
           <BuildSteps steps={steps} currentStep={currentStep} onStepClick={onStepClick} showTitle={false} />
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

@@ -3,8 +3,8 @@ import type { WebContainer } from '@webcontainer/api';
 import Tabs from './Tabs';
 import CodeEditor from './CodeEditor';
 import { Preview } from './Preview';
-import FileExplorer from '../FileExplorer/FileExplorer';
-import type { FileItem } from '../../types';
+import FileExplorer from '@/components/FileExplorer/FileExplorer';
+import type { FileItem } from '@/types';
 
 interface ContentProps {
   webContainer: WebContainer | null;
@@ -40,7 +40,7 @@ export default function Content({
       <div className="flex-1 flex min-h-0">
         {activeTab === 'code' ? (
           <>
-            <div className="w-64 border-r border-gray-700 flex-shrink-0 flex flex-col min-h-0">
+            <div className="w-64 border-r border-border flex-shrink-0 flex flex-col min-h-0 bg-card">
               <FileExplorer files={files} onFileSelect={onFileSelect} />
             </div>
             <div className="flex-1 min-w-0">

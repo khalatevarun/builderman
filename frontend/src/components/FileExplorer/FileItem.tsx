@@ -21,25 +21,25 @@ export default function FileItem({
 }: FileItemProps) {
   return (
     <div
-      className="flex items-center gap-1 py-1 px-2 hover:bg-gray-800 rounded cursor-pointer text-gray-300"
+      className="flex items-center gap-1 py-1 px-2 hover:bg-accent rounded-md cursor-pointer text-foreground text-sm"
       style={{ paddingLeft: `${level * 1.5}rem` }}
       onClick={type === 'folder' ? onToggle : onSelect}
     >
       {type === 'folder' && (
-        <button className="p-0.5">
+        <span className="p-0.5 shrink-0">
           {isOpen ? (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           )}
-        </button>
+        </span>
       )}
       {type === 'folder' ? (
-        <FolderIcon className="h-4 w-4 text-blue-400" />
+        <FolderIcon className="h-4 w-4 shrink-0 text-primary" />
       ) : (
-        <FileCode className="h-4 w-4 text-gray-400" />
+        <FileCode className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
-      <span>{name}</span>
+      <span className="truncate">{name}</span>
     </div>
   );
 }
