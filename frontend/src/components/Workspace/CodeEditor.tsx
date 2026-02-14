@@ -30,6 +30,17 @@ export default function CodeEditor({ file, onChange }: CodeEditorProps) {
       value={file.content}
       onChange={(value) => onChange && onChange(value ?? '')}
       onMount={(editor, monaco) => {
+        // Suppress semantic diagnostics (e.g. "Cannot find module 'react'"); we have no
+        // node_modules in the editor, so rely on the build (WebContainer) for real errors.
+        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: true,
+        });
+        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: true,
+        });
+
         // Add Cmd/Ctrl+S to trigger save (call onChange with current value)
         try {
           const key = monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS;

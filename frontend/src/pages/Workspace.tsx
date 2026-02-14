@@ -1,5 +1,4 @@
 import { useLocation } from 'react-router-dom';
-import FileExplorer from '../components/FileExplorer/FileExplorer';
 import Content from '../components/Workspace/Content';
 import { CheckpointList } from '../components/CheckpointList';
 import { CollapsibleBuildSteps } from '../components/CollapsibleBuildSteps';
@@ -56,15 +55,11 @@ export default function Workspace() {
         </div>
       </div>
 
-      {/* File Explorer */}
-      <div className="w-80 border-r border-gray-700">
-        <FileExplorer files={files} onFileSelect={setSelectedFile} />
-      </div>
-
       {/* Content Area */}
       <div className="flex-1">
         <Content
           selectedFile={selectedFile}
+          onFileSelect={setSelectedFile}
           webContainer={webContainer}
           files={files}
           isBuildingApp={phase !== 'ready'}
