@@ -35,6 +35,18 @@ export enum StepType {
   }
 
 export interface ChatMessage {
-    role: string;
-    content: string;
+  role: string;
+  content: string;
+}
+
+/** Checkpoint: content-addressable snapshot (tree = path → contentHash). */
+export interface Checkpoint {
+  id: string;
+  version: number;
+  label: string;
+  createdAt: number;
+  /** path → content hash (resolve via blob store). */
+  tree: Record<string, string>;
+  steps: Step[];
+  llmMessages: { role: 'user' | 'assistant'; content: string }[];
 }

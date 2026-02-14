@@ -1,7 +1,8 @@
 import { useLocation } from 'react-router-dom';
 import FileExplorer from '../components/FileExplorer/FileExplorer';
 import Content from '../components/Workspace/Content';
-import { BuildSteps } from '../components/BuildSteps';
+import { CheckpointList } from '../components/CheckpointList';
+import { CollapsibleBuildSteps } from '../components/CollapsibleBuildSteps';
 import { useWebContainer } from '../hooks/useWebContainer';
 import { useWorkspace } from '../hooks/useWorkspace';
 import { handleDownload } from '../utility/helper';
@@ -15,6 +16,8 @@ export default function Workspace() {
     phase,
     files,
     steps,
+    checkpoints,
+    restoreCheckpoint,
     selectedFile,
     setSelectedFile,
     userPrompt,
@@ -27,10 +30,15 @@ export default function Workspace() {
 
   return (
     <div className="h-screen flex bg-gray-900">
-      {/* Left Sidebar - Steps */}
-      <div className="w-90 bg-gray-900 border-r border-gray-700 p-4 overflow-y-auto">
-        <BuildSteps steps={steps} currentStep={currentStep} onStepClick={setCurrentStep} />
-        <div className="mt-4">
+      {/* Left Sidebar - Checkpoints + collapsible Build steps */}
+      <div className="w-90 bg-gray-900 border-r border-gray-700 p-4 overflow-y-auto flex flex-col">
+        <CheckpointList checkpoints={checkpoints} onRestore={restoreCheckpoint} />
+        <CollapsibleBuildSteps
+          steps={steps}
+          currentStep={currentStep}
+          onStepClick={setCurrentStep}
+        />
+        <div className="mt-4 flex-shrink-0">
           <input
             type="text"
             value={userPrompt}

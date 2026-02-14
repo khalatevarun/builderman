@@ -5,15 +5,16 @@ interface BuildStepsProps {
   steps: Step[];
   currentStep: string;
   onStepClick: (stepId: string) => void;
+  /** When false, omit the "Build Steps" heading (e.g. when inside CollapsibleBuildSteps). */
+  showTitle?: boolean;
 }
 
-export function BuildSteps({ steps, currentStep, onStepClick }: BuildStepsProps) {
-
-  console.log("Steps", steps);
-
+export function BuildSteps({ steps, currentStep, onStepClick, showTitle = true }: BuildStepsProps) {
   return (
     <div className="bg-gray-900 rounded-lg shadow-lg p-4 h-full overflow-auto">
+    {showTitle && (
     <h2 className="text-lg font-semibold mb-4 text-gray-100">Build Steps</h2>
+    )}
     <div className="space-y-4">
       {steps.map((step) => (
         <div
