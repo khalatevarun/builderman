@@ -34,26 +34,35 @@ export default function Content({
     }
   }, [selectedFile]);
 
+  const showCode = activeTab === 'code';
+  const showPreview = activeTab === 'preview';
+
   return (
     <div className="h-full flex flex-col">
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} onDownload={onDownload} />
-      <div className="flex-1 flex min-h-0">
-        {activeTab === 'code' ? (
-          <>
-            <div className="w-64 border-r border-border flex-shrink-0 flex flex-col min-h-0 bg-card">
-              <FileExplorer files={files} onFileSelect={onFileSelect} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <CodeEditor file={selectedFile} onChange={onFileChange} />
-            </div>
-          </>
-        ) : (
+      <div className="flex-1 min-h-0 relative">
+        <div
+          className={`absolute inset-0 flex z-0 ${showCode ? 'visible' : 'invisible pointer-events-none'}`}
+          aria-hidden={!showCode}
+        >
+          <div className="w-64 border-r border-border flex-shrink-0 flex flex-col min-h-0 bg-card">
+            <FileExplorer files={files} onFileSelect={onFileSelect} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <CodeEditor file={selectedFile} onChange={onFileChange} />
+          </div>
+        </div>
+       
+        <div
+          className={`absolute inset-0 z-10 ${showPreview ? 'visible' : 'invisible pointer-events-none'}`}
+          aria-hidden={!showPreview}
+        >
           <Preview
             webContainer={webContainer}
             files={files}
             isBuildingApp={isBuildingApp}
           />
-        )}
+        </div>
       </div>
     </div>
   );
