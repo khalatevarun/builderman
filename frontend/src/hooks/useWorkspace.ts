@@ -1,7 +1,14 @@
 import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
-import { FileItem, Step } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+import { FileItem, Step, Checkpoint } from '../types';
 import { parseXml } from '../steps';
-import { applyStepsToFiles, updateFileByPath } from '../utility/file-tree';
+import {
+  applyStepsToFiles,
+  updateFileByPath,
+  flattenFiles,
+  buildFileTreeFromFlatList,
+  contentHash,
+} from '../utility/file-tree';
 import { getChatResponse, getTemplate } from '../utility/api';
 
 // ---------------------------------------------------------------------------
@@ -36,7 +43,13 @@ type WorkspaceAction =
       xml: string;
       messages: { role: 'user' | 'assistant'; content: string }[];
     }
-  | { type: 'EDIT_FILE'; path: string; content: string };
+  | { type: 'EDIT_FILE'; path: string; content: string }
+  | {
+      type: 'RESTORE_CHECKPOINT';
+      files: FileItem[];
+      steps: Step[];
+      llmMessages: { role: 'user' | 'assistant'; content: string }[];
+    };
 
 // ---------------------------------------------------------------------------
 // Reducer (pure & synchronous)
@@ -84,6 +97,16 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
       };
     }
 
+    case 'RESTORE_CHECKPOINT': {
+      return {
+        ...state,
+        files: action.files,
+        steps: action.steps,
+        llmMessages: action.llmMessages,
+        phase: 'ready',
+      };
+    }
+
     default:
       return state;
   }
@@ -107,6 +130,10 @@ export interface UseWorkspaceReturn {
   currentStep: string;
   setCurrentStep: React.Dispatch<React.SetStateAction<string>>;
 
+  /** Checkpoints (content-addressable). */
+  checkpoints: Checkpoint[];
+  restoreCheckpoint: (id: string) => void;
+
   /** Actions. */
   submitFollowUp: () => Promise<void>;
   editFile: (content: string) => void;
@@ -119,11 +146,68 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
   const [selectedFile, setSelectedFile] = useState<{ name: string; content: string; path?: string } | null>(null);
   const [userPrompt, setUserPrompt] = useState('');
   const [currentStep, setCurrentStep] = useState('');
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const pendingSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Blob store for content-addressable checkpoints (hash → content)
+  const blobStoreRef = useRef(new Map<string, string>());
 
   // Keep a ref to llmMessages so submitFollowUp always reads the latest value
   const llmMessagesRef = useRef(state.llmMessages);
   llmMessagesRef.current = state.llmMessages;
+
+  /** Build a checkpoint from current files/steps/messages and push to blob store. */
+  const createCheckpoint = useCallback(
+    (
+      files: FileItem[],
+      steps: Step[],
+      llmMessages: { role: 'user' | 'assistant'; content: string }[],
+      label: string,
+      version: number
+    ): Checkpoint => {
+      const flat = flattenFiles(files);
+      const tree: Record<string, string> = {};
+      const blob = blobStoreRef.current;
+      for (const { path, content } of flat) {
+        const hash = contentHash(content);
+        if (!blob.has(hash)) blob.set(hash, content);
+        tree[path] = hash;
+      }
+      return {
+        id: uuidv4(),
+        version,
+        label,
+        createdAt: Date.now(),
+        tree,
+        steps: [...steps],
+        llmMessages: [...llmMessages],
+      };
+    },
+    []
+  );
+
+  /** Restore state from a checkpoint (resolve tree via blob store). */
+  const restoreCheckpoint = useCallback(
+    (id: string) => {
+      const cp = checkpoints.find(c => c.id === id);
+      if (!cp) return;
+      const blob = blobStoreRef.current;
+      const flat = Object.entries(cp.tree).map(([path, hash]) => {
+        const content = blob.get(hash);
+        if (content === undefined) throw new Error(`Missing blob for hash ${hash}`);
+        return { path, content };
+      });
+      const files = buildFileTreeFromFlatList(flat);
+      dispatch({
+        type: 'RESTORE_CHECKPOINT',
+        files,
+        steps: cp.steps,
+        llmMessages: cp.llmMessages,
+      });
+      setSelectedFile(null);
+    },
+    [checkpoints]
+  );
 
   // ---- Init: fetch template, then chat ----
   useEffect(() => {
@@ -140,39 +224,54 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
       }));
 
       const stepsResponse = await getChatResponse(messagesPayload);
-
+      const xml = stepsResponse.data.response;
+      const newSteps = parseXml(xml);
       const allMessages = [
         ...messagesPayload,
-        { role: 'assistant' as const, content: stepsResponse.data.response },
+        { role: 'assistant' as const, content: xml },
       ];
 
-      // Atomically: apply LLM steps + save messages + phase → 'ready'
-      dispatch({ type: 'CODE_GENERATED', xml: stepsResponse.data.response, messages: allMessages });
+      // Checkpoint = state after CODE_GENERATED. Compute from scratch (template + new steps).
+      const templateSteps = parseXml(uiPrompts[0]);
+      const { files: filesAfterTemplate } = applyStepsToFiles([], templateSteps);
+      const { files: newFiles } = applyStepsToFiles(filesAfterTemplate, newSteps);
+      const stepsAfterTemplate = templateSteps.map(s => ({ ...s, status: 'completed' as const }));
+      const allSteps = [...stepsAfterTemplate, ...newSteps.map(s => ({ ...s, status: 'completed' as const }))];
+      const cp = createCheckpoint(newFiles, allSteps, allMessages, initialPrompt, 1);
+      setCheckpoints(prev => [...prev, cp]);
+
+      dispatch({ type: 'CODE_GENERATED', xml, messages: allMessages });
     }
 
     init();
-  }, [initialPrompt]);
+  }, [initialPrompt, createCheckpoint]);
 
   // ---- Follow-up prompt ----
   const submitFollowUp = useCallback(async () => {
     const newMessage = { role: 'user' as const, content: userPrompt };
     const allMessages = [...llmMessagesRef.current, newMessage];
+    const promptLabel = userPrompt;
 
     dispatch({ type: 'START_BUILDING' });
 
     const response = await getChatResponse(allMessages);
+    const xml = response.data.response;
+    const newSteps = parseXml(xml);
+    const fullMessages = [
+      ...allMessages,
+      { role: 'assistant' as const, content: xml },
+    ];
 
-    dispatch({
-      type: 'CODE_GENERATED',
-      xml: response.data.response,
-      messages: [
-        ...allMessages,
-        { role: 'assistant' as const, content: response.data.response },
-      ],
-    });
+    // Checkpoint = state after this CODE_GENERATED (current files + new steps).
+    const { files: newFiles } = applyStepsToFiles(state.files, newSteps);
+    const newStepsWithStatus = newSteps.map(s => ({ ...s, status: 'completed' as const }));
+    const allSteps = [...state.steps, ...newStepsWithStatus];
+    const cp = createCheckpoint(newFiles, allSteps, fullMessages, promptLabel, checkpoints.length + 1);
+    setCheckpoints(prev => [...prev, cp]);
 
+    dispatch({ type: 'CODE_GENERATED', xml, messages: fullMessages });
     setUserPrompt('');
-  }, [userPrompt]);
+  }, [userPrompt, state.files, state.steps, checkpoints.length, createCheckpoint]);
 
   // ---- File edit (debounced, used by code editor) ----
   const editFile = useCallback(
@@ -196,6 +295,8 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
     phase: state.phase,
     files: state.files,
     steps: state.steps,
+    checkpoints,
+    restoreCheckpoint,
     selectedFile,
     setSelectedFile,
     userPrompt,

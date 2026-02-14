@@ -190,3 +190,30 @@ export function didPackageJsonChange(
 
   return prev!.content !== current!.content;
 }
+
+/**
+ * Simple non-crypto hash for content-addressable storage (in-memory).
+ * Consistent: same content always yields the same hash.
+ */
+export function contentHash(content: string): string {
+  let h = 5381;
+  for (let i = 0; i < content.length; i++) {
+    h = ((h << 5) + h) ^ content.charCodeAt(i);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/**
+ * Build a nested FileItem tree from a flat list of path + content.
+ * Used when restoring a checkpoint (resolve tree hashes to content, then call this).
+ */
+export function buildFileTreeFromFlatList(
+  flat: Array<{ path: string; content: string }>
+): FileItem[] {
+  let result: FileItem[] = [];
+  for (const { path, content } of flat) {
+    const segments = path.split('/').filter(Boolean);
+    result = upsertFile(result, segments, '', content);
+  }
+  return result;
+}
