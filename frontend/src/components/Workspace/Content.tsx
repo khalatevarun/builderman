@@ -3,11 +3,13 @@ import type { WebContainer } from '@webcontainer/api';
 import Tabs from './Tabs';
 import CodeEditor from './CodeEditor';
 import { Preview } from './Preview';
+import FileExplorer from '../FileExplorer/FileExplorer';
 import type { FileItem } from '../../types';
 
 interface ContentProps {
   webContainer: WebContainer | null;
   selectedFile: { name: string; content: string; path?: string } | null;
+  onFileSelect: (file: { name: string; content: string; path: string }) => void;
   onFileChange?: (content: string) => void;
   onDownload?: () => void;
   files: FileItem[];
@@ -16,6 +18,7 @@ interface ContentProps {
 
 export default function Content({
   selectedFile,
+  onFileSelect,
   webContainer,
   onFileChange,
   onDownload,
@@ -34,9 +37,16 @@ export default function Content({
   return (
     <div className="h-full flex flex-col">
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} onDownload={onDownload} />
-      <div className="flex-1">
+      <div className="flex-1 flex min-h-0">
         {activeTab === 'code' ? (
-          <CodeEditor file={selectedFile} onChange={onFileChange} />
+          <>
+            <div className="w-64 border-r border-gray-700 flex-shrink-0 flex flex-col min-h-0">
+              <FileExplorer files={files} onFileSelect={onFileSelect} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <CodeEditor file={selectedFile} onChange={onFileChange} />
+            </div>
+          </>
         ) : (
           <Preview
             webContainer={webContainer}
