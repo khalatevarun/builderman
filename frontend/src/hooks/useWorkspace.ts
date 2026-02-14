@@ -9,6 +9,7 @@ import {
   buildFileTreeFromFlatList,
   contentHash,
 } from '../utility/file-tree';
+import { buildModificationsBlock } from '../utility/bolt-modifications';
 import { getChatResponse, getTemplate } from '../utility/api';
 
 // ---------------------------------------------------------------------------
@@ -156,6 +157,9 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
   const llmMessagesRef = useRef(state.llmMessages);
   llmMessagesRef.current = state.llmMessages;
 
+  // Files at last LLM response; used to build <bolt_file_modifications> when user edits before follow-up
+  const filesAtLastLlmRef = useRef<Array<{ path: string; content: string }> | null>(null);
+
   /** Build a checkpoint from current files/steps/messages and push to blob store. */
   const createCheckpoint = useCallback(
     (
@@ -204,6 +208,7 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
         steps: cp.steps,
         llmMessages: cp.llmMessages,
       });
+      filesAtLastLlmRef.current = flat;
       setSelectedFile(null);
     },
     [checkpoints]
@@ -241,6 +246,7 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
       setCheckpoints(prev => [...prev, cp]);
 
       dispatch({ type: 'CODE_GENERATED', xml, messages: allMessages });
+      filesAtLastLlmRef.current = flattenFiles(newFiles);
     }
 
     init();
@@ -248,7 +254,13 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
 
   // ---- Follow-up prompt ----
   const submitFollowUp = useCallback(async () => {
-    const newMessage = { role: 'user' as const, content: userPrompt };
+    const currentFlat = flattenFiles(state.files);
+    let content = userPrompt;
+    if (filesAtLastLlmRef.current != null) {
+      const block = buildModificationsBlock(filesAtLastLlmRef.current, currentFlat);
+      if (block) content = `${block}\n\n${userPrompt}`;
+    }
+    const newMessage = { role: 'user' as const, content };
     const allMessages = [...llmMessagesRef.current, newMessage];
     const promptLabel = userPrompt;
 
@@ -270,6 +282,7 @@ export function useWorkspace(initialPrompt: string): UseWorkspaceReturn {
     setCheckpoints(prev => [...prev, cp]);
 
     dispatch({ type: 'CODE_GENERATED', xml, messages: fullMessages });
+    filesAtLastLlmRef.current = flattenFiles(newFiles);
     setUserPrompt('');
   }, [userPrompt, state.files, state.steps, checkpoints.length, createCheckpoint]);
 
